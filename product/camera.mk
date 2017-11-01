@@ -9,4 +9,4 @@ PRODUCT_COPY_FILES += \
 PRODUCT_PACKAGES += \
     libshims_camera \
     libshim_ims_camera \
-    Snap
+    ParanoidCamera
