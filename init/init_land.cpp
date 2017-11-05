@@ -119,8 +119,6 @@ void check_device()
 
 void init_variant_properties()
 {
-    if (property_get("ro.product.device") != "land")
-        return;
 
     import_kernel_cmdline(0, import_cmdline);
 
