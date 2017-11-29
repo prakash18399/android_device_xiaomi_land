@@ -1,4 +1,4 @@
-/* Copyright (c) 2012-2016, The Linux Foundation. All rights reserved.
+/* Copyright (c) 2012-2015, The Linux Foundataion. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -30,36 +30,67 @@
 #ifndef __QCAMERA2HARDWAREINTERFACE_H__
 #define __QCAMERA2HARDWAREINTERFACE_H__
 
-// System dependencies
+#include <hardware/camera.h>
+#include <utils/Log.h>
 #include <utils/Mutex.h>
 #include <utils/Condition.h>
+#include <QCameraParametersIntf.h>
 
-// Camera dependencies
-#include "camera.h"
-#include "QCameraAllocator.h"
-#include "QCameraChannel.h"
-#include "QCameraCmdThread.h"
-#include "QCameraDisplay.h"
-#include "QCameraMem.h"
-#include "QCameraParameters.h"
-#include "QCameraParametersIntf.h"
-#include "QCameraPerf.h"
-#include "QCameraPostProc.h"
+#include "QCameraTrace.h"
 #include "QCameraQueue.h"
+#include "QCameraCmdThread.h"
+#include "QCameraChannel.h"
 #include "QCameraStream.h"
 #include "QCameraStateMachine.h"
+#include "QCameraAllocator.h"
+#include "QCameraPostProc.h"
 #include "QCameraThermalAdapter.h"
+#include "QCameraMem.h"
+#include "QCameraPerf.h"
+#include "QCameraDisplay.h"
 
 #ifdef TARGET_TS_MAKEUP
 #include "ts_makeup_engine.h"
 #include "ts_detectface_engine.h"
 #endif
 extern "C" {
-#include "mm_camera_interface.h"
-#include "mm_jpeg_interface.h"
+#include <mm_camera_interface.h>
+#include <mm_jpeg_interface.h>
 }
 
-#include "QCameraTrace.h"
+#if DISABLE_DEBUG_LOG
+
+inline void __null_log(int, const char *, const char *, ...) {}
+
+#ifdef ALOGD
+#undef ALOGD
+#define ALOGD(...) do { __null_log(0, LOG_TAG,__VA_ARGS__); } while (0)
+#endif
+
+#ifdef ALOGI
+#undef ALOGI
+#define ALOGI(...) do { __null_log(0, LOG_TAG,__VA_ARGS__); } while (0)
+#endif
+
+#ifdef CDBG
+#undef CDBG
+#define CDBG(...) do{} while(0)
+#endif
+
+#else
+
+
+#ifdef CDBG
+#undef CDBG
+#endif //#ifdef CDBG
+#define CDBG(fmt, args...) ALOGD_IF(gCamHalLogLevel >= 2, fmt, ##args)
+
+#ifdef CDBG_HIGH
+#undef CDBG_HIGH
+#endif //#ifdef CDBG_HIGH
+#define CDBG_HIGH(fmt, args...) ALOGD_IF(gCamHalLogLevel >= 1, fmt, ##args)
+
+#endif // DISABLE_DEBUG_LOG
 
 namespace qcamera {
 
@@ -96,7 +127,6 @@ typedef struct {
 #define QCAMERA_DUMP_FRM_THUMBNAIL           (1<<3)
 #define QCAMERA_DUMP_FRM_RAW                 (1<<4)
 #define QCAMERA_DUMP_FRM_JPEG                (1<<5)
-#define QCAMERA_DUMP_FRM_INPUT_REPROCESS     (1<<6)
 
 #define QCAMERA_DUMP_FRM_MASK_ALL    0x000000ff
 
@@ -107,6 +137,8 @@ typedef struct {
 #define MAX(a, b) ((a) > (b) ? (a) : (b))
 
 #define EXIF_ASCII_PREFIX_SIZE           8   //(sizeof(ExifAsciiPrefix))
+
+extern volatile uint32_t gCamHalLogLevel;
 
 typedef enum {
     QCAMERA_NOTIFY_CALLBACK,
@@ -205,16 +237,12 @@ public:
     static void stop_preview(struct camera_device *);
     static int preview_enabled(struct camera_device *);
     static int store_meta_data_in_buffers(struct camera_device *, int enable);
-    static int restart_start_preview(struct camera_device *);
-    static int restart_stop_preview(struct camera_device *);
-    static int pre_start_recording(struct camera_device *);
     static int start_recording(struct camera_device *);
     static void stop_recording(struct camera_device *);
     static int recording_enabled(struct camera_device *);
     static void release_recording_frame(struct camera_device *, const void *opaque);
     static int auto_focus(struct camera_device *);
     static int cancel_auto_focus(struct camera_device *);
-    static int pre_take_picture(struct camera_device *);
     static int take_picture(struct camera_device *);
     int takeLiveSnapshot_internal();
     int takeBackendPic_internal(bool *JpegMemOpt, char *raw_format);
@@ -222,15 +250,10 @@ public:
     void checkIntPicPending(bool JpegMemOpt, char *raw_format);
     static int cancel_picture(struct camera_device *);
     static int set_parameters(struct camera_device *, const char *parms);
-    static int stop_after_set_params(struct camera_device *);
-    static int commit_params(struct camera_device *);
-    static int restart_after_set_params(struct camera_device *);
     static char* get_parameters(struct camera_device *);
     static void put_parameters(struct camera_device *, char *);
     static int send_command(struct camera_device *,
               int32_t cmd, int32_t arg1, int32_t arg2);
-    static int send_command_restart(struct camera_device *,
-            int32_t cmd, int32_t arg1, int32_t arg2);
     static void release(struct camera_device *);
     static int dump(struct camera_device *, int fd);
     static int close_camera_device(hw_device_t *);
@@ -256,9 +279,6 @@ public:
             cam_sync_related_sensors_event_info_t* info);
     int32_t setMpoComposition(bool enable);
     bool getMpoComposition(void);
-    bool getRecordingHintValue(void);
-    int32_t setRecordingHintValue(int32_t value);
-    bool isPreviewRestartNeeded(void) { return mPreviewRestartNeeded; };
     static int getCapabilities(uint32_t cameraId,
             struct camera_info *info, cam_sync_type_t *cam_type);
     static int initCapabilities(uint32_t cameraId, mm_camera_vtbl_t *cameraHandle);
@@ -312,13 +332,11 @@ private:
     int startPreview();
     int stopPreview();
     int storeMetaDataInBuffers(int enable);
-    int preStartRecording();
     int startRecording();
     int stopRecording();
     int releaseRecordingFrame(const void *opaque);
     int autoFocus();
     int cancelAutoFocus();
-    int preTakePicture();
     int takePicture();
     int stopCaptureChannel(bool destroy);
     int cancelPicture();
@@ -372,7 +390,7 @@ private:
     void debugShowPreviewFPS();
     void dumpJpegToFile(const void *data, size_t size, uint32_t index);
     void dumpFrameToFile(QCameraStream *stream,
-            mm_camera_buf_def_t *frame, uint32_t dump_type, const char *misc = NULL);
+            mm_camera_buf_def_t *frame, uint32_t dump_type);
     void dumpMetadataToFile(QCameraStream *stream,
                             mm_camera_buf_def_t *frame,char *type);
     void releaseSuperBuf(mm_camera_super_buf_t *super_buf);
@@ -381,7 +399,6 @@ private:
     uint32_t getJpegQuality();
     QCameraExif *getExifData();
     cam_sensor_t getSensorType();
-    bool isLowPowerMode();
 
     int32_t processAutoFocusEvent(cam_auto_focus_data_t &focus_data);
     int32_t processZoomEvent(cam_crop_data_t &crop_info);
@@ -420,8 +437,7 @@ private:
     int32_t addRawChannel();
     int32_t addMetaDataChannel();
     int32_t addAnalysisChannel();
-    QCameraReprocessChannel *addReprocChannel(QCameraChannel *pInputChannel,
-            int8_t cur_channel_index = 0);
+    QCameraReprocessChannel *addReprocChannel(QCameraChannel *pInputChannel);
     QCameraReprocessChannel *addOfflineReprocChannel(
                                                 cam_pp_offline_src_config_t &img_config,
                                                 cam_pp_feature_config_t &pp_feature,
@@ -438,14 +454,13 @@ private:
     int32_t prepareRawStream(QCameraChannel *pChannel);
     QCameraChannel *getChannelByHandle(uint32_t channelHandle);
     mm_camera_buf_def_t *getSnapshotFrame(mm_camera_super_buf_t *recvd_frame);
-    int32_t processFaceDetectionResult(cam_faces_data_t *fd_data);
+    int32_t processFaceDetectionResult(cam_face_detection_data_t *fd_data);
     bool needPreviewFDCallback(uint8_t num_faces);
     int32_t processHistogramStats(cam_hist_stats_t &stats_data);
     int32_t setHistogram(bool histogram_en);
     int32_t setFaceDetection(bool enabled);
     int32_t prepareHardwareForSnapshot(int32_t afNeeded);
     bool needProcessPreviewFrame();
-    bool needSendPreviewCallback();
     bool isNoDisplayMode() {return mParameters.isNoDisplayMode();};
     bool isZSLMode() {return mParameters.isZSLMode();};
     bool isRdiMode() {return mParameters.isRdiMode();};
@@ -477,10 +492,8 @@ private:
     bool processUFDumps(qcamera_jpeg_evt_payload_t *evt);
     void captureDone();
     int32_t updateMetadata(metadata_buffer_t *pMetaData);
-    void fillFacesData(cam_faces_data_t &faces_data, metadata_buffer_t *metadata);
 
-    int32_t getPPConfig(cam_pp_feature_config_t &pp_config,
-            int8_t curIndex = 0, bool multipass = FALSE);
+    int32_t getPPConfig(cam_pp_feature_config_t &pp_config, int curCount);
     virtual uint32_t scheduleBackgroundTask(BackgroundTask* bgTask);
     virtual int32_t waitForBackgroundTask(uint32_t &taskId);
     bool needDeferred(cam_stream_type_t stream_type);
@@ -520,8 +533,6 @@ private:
                                         void *userdata);
     static void snapshot_channel_cb_routine(mm_camera_super_buf_t *frame,
            void *userdata);
-    static void raw_channel_cb_routine(mm_camera_super_buf_t *frame,
-            void *userdata);
     static void raw_stream_cb_routine(mm_camera_super_buf_t *frame,
                                       QCameraStream *stream,
                                       void *userdata);
@@ -548,19 +559,13 @@ private:
                                    int32_t cbStatus);
     static void getLogLevel();
 
-    int32_t startRAWChannel(QCameraChannel *pChannel);
-    int32_t stopRAWChannel();
-
-    inline bool getNeedRestart() {return m_bNeedRestart;}
-    inline void setNeedRestart(bool needRestart) {m_bNeedRestart = needRestart;}
-
 private:
     camera_device_t   mCameraDevice;
     uint32_t          mCameraId;
     mm_camera_vtbl_t *mCameraHandle;
     bool mCameraOpened;
 
-    cam_jpeg_metadata_t mJpegMetadata;
+    cam_related_system_calibration_data_t mRelCamCalibData;
     bool m_bRelCamCalibValid;
 
     preview_stream_ops_t *mPreviewWindow;
@@ -622,8 +627,6 @@ private:
     bool mIs3ALocked;
     bool mPrepSnapRun;
     int32_t mZoomLevel;
-    // Flag to indicate whether preview restart needed (for dual camera mode)
-    bool mPreviewRestartNeeded;
 
     int mVFrameCount;
     int mVLastFrameCount;
@@ -760,12 +763,6 @@ private:
 
     //QCamera Display Object
     QCameraDisplay mCameraDisplay;
-
-    bool m_bNeedRestart;
-    Mutex mMapLock;
-    Condition mMapCond;
-    // Count to determine the number of preview frames ignored for displaying.
-    uint8_t mIgnoredPreviewCount;
 };
 
 }; // namespace qcamera

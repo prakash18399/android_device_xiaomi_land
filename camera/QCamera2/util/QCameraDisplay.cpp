@@ -1,4 +1,4 @@
-/* Copyright (c) 2015-2016, The Linux Foundation. All rights reserved.
+/* Copyright (c) 2015, The Linux Foundation. All rights reserved.
 *
 * Redistribution and use in source and binary forms, with or without
 * modification, are permitted provided that the following conditions are
@@ -29,16 +29,9 @@
 
 #define LOG_TAG "QCameraDisplay"
 
-// To remove
 #include <cutils/properties.h>
-
-// Camera dependencies
 #include "QCamera2HWI.h"
 #include "QCameraDisplay.h"
-
-extern "C" {
-#include "mm_camera_dbg.h"
-}
 
 #define CAMERA_VSYNC_WAIT_MS               33 // Used by vsync thread to wait for vsync timeout.
 #define DISPLAY_EVENT_RECEIVER_ARRAY_SIZE  1
@@ -94,7 +87,7 @@ void* QCameraDisplay::vsyncThreadCamera(void * data)
     looper = new android::Looper(false);
     status_t status = pQCameraDisplay->mDisplayEventReceiver.initCheck();
     if (status != NO_ERROR) {
-        LOGE("Initialization of DisplayEventReceiver failed with status: %d", status);
+        ALOGE("Initialization of DisplayEventReceiver failed with status: %d", status);
         return NULL;
     }
     looper->addFd(pQCameraDisplay->mDisplayEventReceiver.getFd(), 0, ALOOPER_EVENT_INPUT,
@@ -154,11 +147,11 @@ QCameraDisplay::QCameraDisplay()
         for (int i=0; i < CAMERA_NUM_VSYNC_INTERVAL_HISTORY; i++) {
             mVsyncIntervalHistory[i] = default_vsync_interval;
         }
-        LOGD("display jitter num_vsync_from_vfe_isr_to_presentation_timestamp %u \
+        CDBG("display jitter num_vsync_from_vfe_isr_to_presentation_timestamp %u \
                 set_timestamp_num_ms_prior_to_vsync %u",
                 mNum_vsync_from_vfe_isr_to_presentation_timestamp,
                 mSet_timestamp_num_ms_prior_to_vsync);
-        LOGD("display jitter vfe_and_mdp_freq_wiggle_filter_max_ms %u \
+        CDBG("display jitter vfe_and_mdp_freq_wiggle_filter_max_ms %u \
                 vfe_and_mdp_freq_wiggle_filter_min_ms %u",
                 mVfe_and_mdp_freq_wiggle_filter_max_ms,
                 mVfe_and_mdp_freq_wiggle_filter_min_ms);
@@ -265,7 +258,7 @@ nsecs_t QCameraDisplay::computePresentationTimeStamp(nsecs_t frameTimeStamp)
             } else if (vsyncOffset < keepInCurrentVsync) {
                 mAdditionalVsyncOffsetForWiggle = 0;
             }
-            LOGD("vsyncTimeStamp: %llu presentationTimeStamp: %llu expectedVsyncOffset: %d \
+            CDBG("vsyncTimeStamp: %llu presentationTimeStamp: %llu expectedVsyncOffset: %d \
                     timeDifference: %llu vsyncffset: %d avgvsync: %llu \
                     additionalvsyncOffsetForWiggle: %llu",
                     mVsyncTimeStamp, presentationTimeStamp, expectedVsyncOffset,

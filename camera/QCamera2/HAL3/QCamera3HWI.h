@@ -1,4 +1,4 @@
-/* Copyright (c) 2012-2016, The Linux Foundation. All rights reserved.
+/* Copyright (c) 2012-2015, The Linux Foundataion. All rights reserved.
 *
 * Redistribution and use in source and binary forms, with or without
 * modification, are permitted provided that the following conditions are
@@ -30,24 +30,35 @@
 #ifndef __QCAMERA3HARDWAREINTERFACE_H__
 #define __QCAMERA3HARDWAREINTERFACE_H__
 
-// System dependencies
-#include <camera/CameraMetadata.h>
 #include <pthread.h>
-#include <utils/KeyedVector.h>
 #include <utils/List.h>
-
-// Camera dependencies
-#include "camera3.h"
+#include <utils/KeyedVector.h>
+#include <hardware/camera3.h>
+#include <camera/CameraMetadata.h>
+#include "QCameraTrace.h"
+#include "QCamera3HALHeader.h"
 #include "QCamera3Channel.h"
 #include "QCamera3CropRegionMapper.h"
-#include "QCamera3HALHeader.h"
-#include "QCamera3Mem.h"
 #include "QCameraPerf.h"
 
 extern "C" {
-#include "mm_camera_interface.h"
-#include "mm_jpeg_interface.h"
+#include <mm_camera_interface.h>
+#include <mm_jpeg_interface.h>
 }
+#ifdef CDBG
+#undef CDBG
+#endif //#ifdef CDBG
+#define CDBG(fmt, args...) ALOGD_IF(gCamHal3LogLevel >= 2, fmt, ##args)
+
+#ifdef CDBG_HIGH
+#undef CDBG_HIGH
+#endif //#ifdef CDBG_HIGH
+#define CDBG_HIGH(fmt, args...) ALOGD_IF(gCamHal3LogLevel >= 1, fmt, ##args)
+
+#ifdef CDBG_FATAL_IF
+#undef CDBG_FATAL_IF
+#endif //#ifdef CDBG_FATAL_IF
+#define CDBG_FATAL_IF(cond, ...) LOG_ALWAYS_FATAL_IF(cond, ## __VA_ARGS__)
 
 using namespace android;
 
@@ -134,7 +145,7 @@ public:
     static void convertFromRegions(cam_area_t &roi, const camera_metadata_t *settings,
                                    uint32_t tag);
     static bool resetIfNeededROI(cam_area_t* roi, const cam_crop_region_t* scalerCropRegion);
-    static void convertLandmarks(cam_face_landmarks_info_t face, int32_t* landmarks);
+    static void convertLandmarks(cam_face_detection_info_t face, int32_t* landmarks);
     static int32_t getScalarFormat(int32_t format);
     static int32_t getSensorSensitivity(int32_t iso_mode);
 
@@ -143,7 +154,7 @@ public:
 
     static void captureResultCb(mm_camera_super_buf_t *metadata,
                 camera3_stream_buffer_t *buffer, uint32_t frame_number,
-                bool isInputBuffer, void *userdata);
+                void *userdata);
 
     int initialize(const camera3_callback_ops_t *callback_ops);
     int configureStreams(camera3_stream_configuration_t *stream_list);
@@ -177,8 +188,7 @@ public:
     cam_denoise_process_type_t getTemporalDenoiseProcessPlate();
 
     void captureResultCb(mm_camera_super_buf_t *metadata,
-                camera3_stream_buffer_t *buffer, uint32_t frame_number,
-                bool isInputBuffer);
+                camera3_stream_buffer_t *buffer, uint32_t frame_number);
     cam_dimension_t calcMaxJpegDim();
     bool needOnlineRotation();
     uint32_t getJpegQuality();
@@ -257,7 +267,6 @@ private:
             bool free_and_bufdone_meta_buf);
     void handleBufferWithLock(camera3_stream_buffer_t *buffer,
             uint32_t frame_number);
-    void handleInputBufferWithLock(uint32_t frame_number);
     void unblockRequestIfNecessary();
     void dumpMetadataToFile(tuning_params_t &meta, uint32_t &dumpFrameCount,
             bool enabled, const char *type, uint32_t frameNumber);
@@ -279,7 +288,6 @@ private:
     int32_t numOfSizesOnEncoder(const camera3_stream_configuration_t *streamList,
             const cam_dimension_t &maxViewfinderSize);
 
-    void addToPPFeatureMask(int stream_format, uint32_t stream_idx);
     void updateFpsInPreviewBuffer(metadata_buffer_t *metadata, uint32_t frame_number);
 
     void enablePowerHint();
@@ -296,7 +304,6 @@ private:
     void hdrPlusPerfLock(mm_camera_super_buf_t *metadata_buf);
 
     static bool supportBurstCapture(uint32_t cameraId);
-    int32_t setBundleInfo();
 
     camera3_device_t   mCameraDevice;
     uint32_t           mCameraId;
@@ -313,8 +320,6 @@ private:
     QCamera3RawDumpChannel *mRawDumpChannel;
     QCamera3RegularChannel *mDummyBatchChannel;
     QCameraPerfLock m_perfLock;
-
-    uint32_t mChannelHandle;
 
     void saveExifParams(metadata_buffer_t *metadata);
     mm_jpeg_exif_params_t mExifParams;
@@ -368,7 +373,6 @@ private:
         uint32_t partial_result_cnt;
         uint8_t capture_intent;
         uint8_t fwkCacMode;
-        bool shutter_notified;
     } PendingRequestInfo;
     typedef struct {
         uint32_t frame_number;

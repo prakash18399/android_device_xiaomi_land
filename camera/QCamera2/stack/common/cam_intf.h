@@ -1,4 +1,4 @@
-/* Copyright (c) 2012-2016, The Linux Foundation. All rights reserved.
+/* Copyright (c) 2012-2015, The Linux Foundation. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -30,11 +30,8 @@
 #ifndef __QCAMERA_INTF_H__
 #define __QCAMERA_INTF_H__
 
-// System dependencies
 #include <string.h>
 #include <media/msmb_isp.h>
-
-// Camera dependencies
 #include "cam_types.h"
 
 #define CAM_PRIV_IOCTL_BASE (V4L2_CID_PRIVATE_BASE + MSM_CAMERA_PRIV_CMD_MAX)
@@ -426,10 +423,6 @@ typedef struct{
     /* Count is K/4 */
     uint8_t optical_black_region_count;
 
-    /* hot pixel */
-    uint8_t hotPixel_mode;
-    uint32_t hotPixel_count;
-    cam_coordinate_type_t hotPixelMap[512];
 } cam_capability_t;
 
 typedef enum {
@@ -439,7 +432,6 @@ typedef enum {
     CAM_STREAM_PARAM_TYPE_GET_OUTPUT_CROP = CAM_INTF_PARM_GET_OUTPUT_CROP,
     CAM_STREAM_PARAM_TYPE_GET_IMG_PROP = CAM_INTF_PARM_GET_IMG_PROP,
     CAM_STREAM_PARAM_TYPE_REQUEST_FRAMES = CAM_INTF_PARM_REQUEST_FRAMES,
-    CAM_STREAM_PARAM_TYPE_REQUEST_OPS_MODE = CAM_INTF_PARM_REQUEST_OPS_MODE,
     CAM_STREAM_PARAM_TYPE_MAX
 } cam_stream_param_type_e;
 
@@ -553,13 +545,7 @@ typedef struct {
     uint16_t   rotation_flag;
     /* Reserved for future use */
     float      reserved[RELCAM_CALIB_RESERVED_MAX];
-} cam_related_system_calibration_data_t;
-
-typedef struct {
-  uint32_t default_sensor_flip;
-  uint32_t sensor_mount_angle;
-  cam_related_system_calibration_data_t otp_calibration_data;
-} cam_jpeg_metadata_t;
+}cam_related_system_calibration_data_t;
 
 #define IMG_NAME_SIZE 32
 typedef struct {
@@ -583,7 +569,6 @@ typedef struct {
         cam_crop_data_t outputCrop;     /* output crop for current frame */
         cam_stream_img_prop_t imgProp;  /* image properties of current frame */
         cam_request_frames frameRequest; /*do TNR process*/
-        cam_perf_mode_t perf_mode;       /*request operational mode*/
     };
 } cam_stream_parm_buffer_t;
 
@@ -667,8 +652,8 @@ typedef struct {
     ((NULL != TABLE_PTR) ? \
     ((TABLE_PTR->data.member_variable_##META_ID[ 0 ] = DATA), \
     (TABLE_PTR->is_valid[META_ID] = 1), (0)) : \
-    ((LOGE("Unable to set metadata TABLE_PTR:%p META_ID:%d", \
-            TABLE_PTR, META_ID)), (-1))) \
+    ((ALOGE("%s: %d, Unable to set metadata TABLE_PTR:%p META_ID:%d", \
+    __func__, __LINE__, TABLE_PTR, META_ID)), (-1))) \
 
 #define ADD_SET_PARAM_ARRAY_TO_BATCH(TABLE_PTR, META_ID, PDATA, COUNT, RCOUNT) \
 { \
@@ -683,8 +668,8 @@ typedef struct {
         TABLE_PTR->is_valid[META_ID] = 1; \
         RCOUNT = COUNT; \
     } else { \
-        LOGE("Unable to set metadata TABLE_PTR:%p META_ID:%d COUNT:%zu", \
-              TABLE_PTR, META_ID, COUNT); \
+        ALOGE("%s: %d, Unable to set metadata TABLE_PTR:%p META_ID:%d COUNT:%zu", \
+                __func__, __LINE__, TABLE_PTR, META_ID, COUNT); \
         RCOUNT = 0; \
     } \
 }
@@ -694,8 +679,8 @@ typedef struct {
     if (NULL != TABLE_PTR) { \
         TABLE_PTR->is_reqd[META_ID] = 1; \
     } else { \
-        LOGE("Unable to get metadata TABLE_PTR:%p META_ID:%d", \
-                  TABLE_PTR, META_ID); \
+        ALOGE("%s: %d, Unable to get metadata TABLE_PTR:%p META_ID:%d", \
+                __func__, __LINE__, TABLE_PTR, META_ID); \
     } \
 }
 
@@ -704,8 +689,8 @@ typedef struct {
     if (NULL != TABLE_PTR) { \
         DATA = TABLE_PTR->data.member_variable_##META_ID[ 0 ]; \
     } else { \
-        LOGE("Unable to read metadata TABLE_PTR:%p META_ID:%d", \
-                  TABLE_PTR, META_ID); \
+        ALOGE("%s: %d, Unable to read metadata TABLE_PTR:%p META_ID:%d", \
+                __func__, __LINE__, TABLE_PTR, META_ID); \
     } \
 }
 
@@ -739,12 +724,6 @@ typedef struct {
     /* common between HAL1 and HAL3 */
     INCLUDE(CAM_INTF_META_HISTOGRAM,                    cam_hist_stats_t,               1);
     INCLUDE(CAM_INTF_META_FACE_DETECTION,               cam_face_detection_data_t,      1);
-    INCLUDE(CAM_INTF_META_FACE_RECOG,                   cam_face_recog_data_t,          1);
-    INCLUDE(CAM_INTF_META_FACE_BLINK,                   cam_face_blink_data_t,          1);
-    INCLUDE(CAM_INTF_META_FACE_GAZE,                    cam_face_gaze_data_t,           1);
-    INCLUDE(CAM_INTF_META_FACE_SMILE,                   cam_face_smile_data_t,          1);
-    INCLUDE(CAM_INTF_META_FACE_LANDMARK,                cam_face_landmarks_data_t,      1);
-    INCLUDE(CAM_INTF_META_FACE_CONTOUR,                 cam_face_contour_data_t,        1);
     INCLUDE(CAM_INTF_META_AUTOFOCUS_DATA,               cam_auto_focus_data_t,          1);
     INCLUDE(CAM_INTF_META_CDS_DATA,                     cam_cds_data_t,                 1);
     INCLUDE(CAM_INTF_PARM_UPDATE_DEBUG_LEVEL,           uint32_t,                       1);
@@ -801,7 +780,6 @@ typedef struct {
     INCLUDE(CAM_INTF_META_LENS_FOCUS_RANGE,             float,                       2);
     INCLUDE(CAM_INTF_META_LENS_STATE,                   cam_af_lens_state_t,         1);
     INCLUDE(CAM_INTF_META_LENS_OPT_STAB_MODE,           uint32_t,                    1);
-    INCLUDE(CAM_INTF_META_VIDEO_STAB_MODE,              uint32_t,                    1);
     INCLUDE(CAM_INTF_META_LENS_FOCUS_STATE,             uint32_t,                    1);
     INCLUDE(CAM_INTF_META_NOISE_REDUCTION_MODE,         uint32_t,                    1);
     INCLUDE(CAM_INTF_META_NOISE_REDUCTION_STRENGTH,     uint32_t,                    1);
@@ -863,8 +841,8 @@ typedef struct {
     INCLUDE(CAM_INTF_PARM_CONTRAST,                     int32_t,                     1);
     INCLUDE(CAM_INTF_PARM_SATURATION,                   int32_t,                     1);
     INCLUDE(CAM_INTF_PARM_BRIGHTNESS,                   int32_t,                     1);
-    INCLUDE(CAM_INTF_PARM_ISO,                          cam_intf_parm_manual_3a_t,   1);
-    INCLUDE(CAM_INTF_PARM_EXPOSURE_TIME,                cam_intf_parm_manual_3a_t,   1);
+    INCLUDE(CAM_INTF_PARM_ISO,                          int32_t,                     1);
+    INCLUDE(CAM_INTF_PARM_EXPOSURE_TIME,                uint64_t,                    1);
     INCLUDE(CAM_INTF_PARM_ZOOM,                         int32_t,                     1);
     INCLUDE(CAM_INTF_PARM_ROLLOFF,                      int32_t,                     1);
     INCLUDE(CAM_INTF_PARM_MODE,                         int32_t,                     1);
@@ -888,7 +866,7 @@ typedef struct {
     INCLUDE(CAM_INTF_PARM_HDR_NEED_1X,                  int32_t,                     1);
     INCLUDE(CAM_INTF_PARM_LOCK_CAF,                     int32_t,                     1);
     INCLUDE(CAM_INTF_PARM_VIDEO_HDR,                    int32_t,                     1);
-    INCLUDE(CAM_INTF_PARM_SENSOR_HDR,                   cam_sensor_hdr_type_t,       1);
+    INCLUDE(CAM_INTF_PARM_SENSOR_HDR,                   int32_t,                     1);
     INCLUDE(CAM_INTF_PARM_VT,                           int32_t,                     1);
     INCLUDE(CAM_INTF_PARM_SET_AUTOFOCUSTUNING,          tune_actuator_t,             1);
     INCLUDE(CAM_INTF_PARM_SET_VFE_COMMAND,              tune_cmd_t,                  1);
@@ -906,8 +884,6 @@ typedef struct {
     INCLUDE(CAM_INTF_PARM_BURST_LED_ON_PERIOD,          uint32_t,                    1);
     INCLUDE(CAM_INTF_PARM_LONGSHOT_ENABLE,              int8_t,                      1);
     INCLUDE(CAM_INTF_PARM_TONE_MAP_MODE,                uint32_t,                    1);
-    INCLUDE(CAM_INTF_META_TOUCH_AE_RESULT,              int32_t,                     1);
-    INCLUDE(CAM_INTF_PARM_DUAL_LED_CALIBRATION,         int32_t,                    1);
 
     /* HAL3 specific */
     INCLUDE(CAM_INTF_META_STREAM_INFO,                  cam_stream_size_info_t,      1);
@@ -956,7 +932,7 @@ typedef struct {
     INCLUDE(CAM_INTF_META_IMG_DYN_FEAT,                 cam_dyn_img_data_t,          1);
     INCLUDE(CAM_INTF_PARM_MANUAL_CAPTURE_TYPE,          cam_manual_capture_type,     1);
     INCLUDE(CAM_INTF_AF_STATE_TRANSITION,               uint8_t,                     1);
-    INCLUDE(CAM_INTF_PARM_INITIAL_EXPOSURE_INDEX,       uint32_t,                    1);
+    INCLUDE(CAM_INTF_PARM_RDI_CID,                      cam_intf_parm_rdi_cid_t,     1);
 } metadata_data_t;
 
 /* Update clear_metadata_buffer() function when a new is_xxx_valid is added to

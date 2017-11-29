@@ -1,4 +1,4 @@
-/* Copyright (c) 2015-2016, The Linux Foundation. All rights reserved.
+/* Copyright (c) 2015, The Linux Foundation. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -29,17 +29,10 @@
 
 #define LOG_TAG "QCameraParametersIntf"
 
-// System dependencies
 #include <utils/Mutex.h>
-
-// Camera dependencies
-#include "QCameraParameters.h"
+#include <utils/Log.h>
 #include "QCameraParametersIntf.h"
-#include "QCameraTrace.h"
-
-extern "C" {
-#include "mm_camera_dbg.h"
-}
+#include "QCameraParameters.h"
 
 namespace qcamera {
 
@@ -67,7 +60,7 @@ int32_t QCameraParametersIntf::allocate()
     Mutex::Autolock lock(mLock);
     mImpl = new QCameraParameters();
     if (!mImpl) {
-        LOGE("Out of memory");
+        ALOGE("%s: Out of memory", __func__);
         return NO_MEMORY;
     }
 
@@ -795,13 +788,6 @@ bool QCameraParametersIntf::isChromaFlashEnabled()
     return mImpl->isChromaFlashEnabled();
 }
 
-bool QCameraParametersIntf::isHighQualityNoiseReductionMode()
-{
-    Mutex::Autolock lock(mLock);
-    CHECK_PARAM_INTF(mImpl);
-    return mImpl->isHighQualityNoiseReductionMode();
-}
-
 bool QCameraParametersIntf::isTruePortraitEnabled()
 {
     Mutex::Autolock lock(mLock);
@@ -827,7 +813,7 @@ bool QCameraParametersIntf::isStillMoreEnabled()
 {
     Mutex::Autolock lock(mLock);
     CHECK_PARAM_INTF(mImpl);
-    return mImpl->isStillMoreEnabled();
+    return mImpl->isSeeMoreEnabled();
 }
 
 bool QCameraParametersIntf::isOptiZoomEnabled()
@@ -1179,28 +1165,6 @@ int8_t  QCameraParametersIntf::getVideoBatchSize()
     return mImpl->getVideoBatchSize();
 }
 
-int32_t QCameraParametersIntf::setManualCaptureMode(
-        QCameraManualCaptureModes value)
-{
-    Mutex::Autolock lock(mLock);
-    CHECK_PARAM_INTF(mImpl);
-    return mImpl->setManualCaptureMode(value);
-}
-
-QCameraManualCaptureModes QCameraParametersIntf::getManualCaptureMode()
-{
-    Mutex::Autolock lock(mLock);
-    CHECK_PARAM_INTF(mImpl);
-    return mImpl->getManualCaptureMode();
-}
-
-int64_t QCameraParametersIntf::getExposureTime()
-{
-    Mutex::Autolock lock(mLock);
-    CHECK_PARAM_INTF(mImpl);
-    return mImpl->getExposureTime();
-}
-
 cam_capture_frame_config_t QCameraParametersIntf::getCaptureFrameConfig()
 {
     Mutex::Autolock lock(mLock);
@@ -1231,6 +1195,7 @@ void QCameraParametersIntf::setLowLightLevel(cam_low_light_mode_t value)
 
 cam_low_light_mode_t QCameraParametersIntf::getLowLightLevel()
 {
+    Mutex::Autolock lock(mLock);
     CHECK_PARAM_INTF(mImpl);
     return mImpl->getLowLightLevel();
 }
@@ -1280,32 +1245,11 @@ int32_t QCameraParametersIntf::bundleRelatedCameras(bool sync, uint32_t sessioni
     return mImpl->bundleRelatedCameras(sync, sessionid);
 }
 
-uint8_t QCameraParametersIntf::fdModeInVideo()
+bool QCameraParametersIntf::isFDInVideoEnabled()
 {
     Mutex::Autolock lock(mLock);
     CHECK_PARAM_INTF(mImpl);
-    return mImpl->fdModeInVideo();
-}
-
-bool QCameraParametersIntf::isOEMFeatEnabled()
-{
-    Mutex::Autolock lock(mLock);
-    CHECK_PARAM_INTF(mImpl);
-    return mImpl->isOEMFeatEnabled();
-}
-
-int32_t QCameraParametersIntf::setZslMode(bool value)
-{
-    Mutex::Autolock lock(mLock);
-    CHECK_PARAM_INTF(mImpl);
-    return mImpl->setZslMode(value);
-}
-
-int32_t QCameraParametersIntf::updateZSLModeValue(bool value)
-{
-    Mutex::Autolock lock(mLock);
-    CHECK_PARAM_INTF(mImpl);
-    return mImpl->updateZSLModeValue(value);
+    return mImpl->isFDInVideoEnabled();
 }
 
 bool QCameraParametersIntf::isReprocScaleEnabled()

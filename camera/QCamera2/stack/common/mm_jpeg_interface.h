@@ -1,4 +1,4 @@
-/* Copyright (c) 2012-2016, The Linux Foundation. All rights reserved.
+/* Copyright (c) 2012-2015, The Linux Foundation. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -29,13 +29,9 @@
 
 #ifndef MM_JPEG_INTERFACE_H_
 #define MM_JPEG_INTERFACE_H_
-
-// System dependencies
-#include <stdbool.h>
-
-// Camera dependencies
 #include "QOMX_JpegExtensions.h"
 #include "cam_intf.h"
+#include <stdbool.h>
 
 #define MM_JPEG_MAX_PLANES 3
 #define MM_JPEG_MAX_BUF CAM_MAX_NUM_BUFS_PER_STREAM
@@ -385,10 +381,10 @@ typedef struct {
  * returns client_handle.
  * failed if client_handle=0
  * jpeg ops tbl and mpo ops tbl will be filled in if open succeeds
- * and jpeg meta data will be cached */
+ * and calibration data will be cached */
 uint32_t jpeg_open(mm_jpeg_ops_t *ops, mm_jpeg_mpo_ops_t *mpo_ops,
   mm_dimension picture_size,
-  cam_jpeg_metadata_t *jpeg_metadata);
+  cam_related_system_calibration_data_t *calibration_data);
 
 /* open a jpeg client -- sync call
  * returns client_handle.

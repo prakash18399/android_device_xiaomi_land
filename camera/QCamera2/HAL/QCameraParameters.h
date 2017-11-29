@@ -1,9 +1,9 @@
 /*
-** Copyright (c) 2012-2016, The Linux Foundation. All rights reserved.
+** Copyright 2008, The Android Open Source Project
+** Copyright (c) 2012-2015, The Linux Foundation. All rights reserved.
 ** Not a Contribution. Apache license notifications and license are
 ** retained for attribution purposes only.
 **
-** Copyright 2008, The Android Open Source Project
 ** Licensed under the Apache License, Version 2.0 (the "License");
 ** you may not use this file except in compliance with the License.
 ** You may obtain a copy of the License at
@@ -16,25 +16,23 @@
 ** See the License for the specific language governing permissions and
 ** limitations under the License.
 */
-
 #ifndef ANDROID_HARDWARE_QCAMERA_PARAMETERS_H
 #define ANDROID_HARDWARE_QCAMERA_PARAMETERS_H
 
-// To remove
-#include <cutils/properties.h>
-
-// System dependencies
 #include <camera/CameraParameters.h>
+#include <cutils/properties.h>
+#include <hardware/camera.h>
+#include <stdlib.h>
 #include <utils/Errors.h>
-
-// Camera dependencies
-#include "camera.h"
+#include <utils/Mutex.h>
+#include "cam_intf.h"
+#include "cam_types.h"
 #include "QCameraMem.h"
-#include "QCameraParametersIntf.h"
 #include "QCameraThermalAdapter.h"
+#include "QCameraParametersIntf.h"
 
 extern "C" {
-#include "mm_jpeg_interface.h"
+#include <mm_jpeg_interface.h>
 }
 
 using namespace android;
@@ -48,11 +46,6 @@ static const char ExifUndefinedPrefix[] = { 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
 #define FOCAL_LENGTH_DECIMAL_PRECISION   100
 
 #define CAMERA_MIN_BATCH_COUNT           4
-
-#define QCAMERA_MAX_EXP_TIME_LEVEL1      100
-#define QCAMERA_MAX_EXP_TIME_LEVEL2      500
-#define QCAMERA_MAX_EXP_TIME_LEVEL3      1000
-#define QCAMERA_MAX_EXP_TIME_LEVEL4      10000
 
 class QCameraParameters: private CameraParameters
 {
@@ -209,7 +202,6 @@ private:
     static const char WHITE_BALANCE_MANUAL[];
     static const char FOCUS_MODE_MANUAL_POSITION[];
     static const char KEY_QC_LONG_SHOT[];
-    static const char KEY_QC_INITIAL_EXPOSURE_INDEX[];
 
     static const char KEY_QC_MANUAL_FOCUS_POSITION[];
     static const char KEY_QC_MANUAL_FOCUS_POS_TYPE[];
@@ -327,10 +319,6 @@ private:
     static const char KEY_QC_STILL_MORE[];
     static const char KEY_QC_SUPPORTED_STILL_MORE_MODES[];
 
-    //Noise reduction mode
-    static const char KEY_QC_NOISE_REDUCTION_MODE[];
-    static const char KEY_QC_NOISE_REDUCTION_MODE_VALUES[];
-
     //Longshot
     static const char KEY_QC_LONGSHOT_SUPPORTED[];
 
@@ -369,10 +357,6 @@ private:
     static const char QC_PIXEL_FORMAT_BAYER_QCOM_RAW_12GRBG[];
     static const char QC_PIXEL_FORMAT_BAYER_QCOM_RAW_12RGGB[];
     static const char QC_PIXEL_FORMAT_BAYER_QCOM_RAW_12BGGR[];
-    static const char QC_PIXEL_FORMAT_BAYER_QCOM_RAW_14GBRG[];
-    static const char QC_PIXEL_FORMAT_BAYER_QCOM_RAW_14GRBG[];
-    static const char QC_PIXEL_FORMAT_BAYER_QCOM_RAW_14RGGB[];
-    static const char QC_PIXEL_FORMAT_BAYER_QCOM_RAW_14BGGR[];
     static const char QC_PIXEL_FORMAT_BAYER_MIPI_RAW_8GBRG[];
     static const char QC_PIXEL_FORMAT_BAYER_MIPI_RAW_8GRBG[];
     static const char QC_PIXEL_FORMAT_BAYER_MIPI_RAW_8RGGB[];
@@ -385,10 +369,6 @@ private:
     static const char QC_PIXEL_FORMAT_BAYER_MIPI_RAW_12GRBG[];
     static const char QC_PIXEL_FORMAT_BAYER_MIPI_RAW_12RGGB[];
     static const char QC_PIXEL_FORMAT_BAYER_MIPI_RAW_12BGGR[];
-    static const char QC_PIXEL_FORMAT_BAYER_MIPI_RAW_14GBRG[];
-    static const char QC_PIXEL_FORMAT_BAYER_MIPI_RAW_14GRBG[];
-    static const char QC_PIXEL_FORMAT_BAYER_MIPI_RAW_14RGGB[];
-    static const char QC_PIXEL_FORMAT_BAYER_MIPI_RAW_14BGGR[];
     static const char QC_PIXEL_FORMAT_BAYER_IDEAL_QCOM_8GBRG[];
     static const char QC_PIXEL_FORMAT_BAYER_IDEAL_QCOM_8GRBG[];
     static const char QC_PIXEL_FORMAT_BAYER_IDEAL_QCOM_8RGGB[];
@@ -401,10 +381,6 @@ private:
     static const char QC_PIXEL_FORMAT_BAYER_IDEAL_QCOM_12GRBG[];
     static const char QC_PIXEL_FORMAT_BAYER_IDEAL_QCOM_12RGGB[];
     static const char QC_PIXEL_FORMAT_BAYER_IDEAL_QCOM_12BGGR[];
-    static const char QC_PIXEL_FORMAT_BAYER_IDEAL_QCOM_14GBRG[];
-    static const char QC_PIXEL_FORMAT_BAYER_IDEAL_QCOM_14GRBG[];
-    static const char QC_PIXEL_FORMAT_BAYER_IDEAL_QCOM_14RGGB[];
-    static const char QC_PIXEL_FORMAT_BAYER_IDEAL_QCOM_14BGGR[];
     static const char QC_PIXEL_FORMAT_BAYER_IDEAL_MIPI_8GBRG[];
     static const char QC_PIXEL_FORMAT_BAYER_IDEAL_MIPI_8GRBG[];
     static const char QC_PIXEL_FORMAT_BAYER_IDEAL_MIPI_8RGGB[];
@@ -417,10 +393,6 @@ private:
     static const char QC_PIXEL_FORMAT_BAYER_IDEAL_MIPI_12GRBG[];
     static const char QC_PIXEL_FORMAT_BAYER_IDEAL_MIPI_12RGGB[];
     static const char QC_PIXEL_FORMAT_BAYER_IDEAL_MIPI_12BGGR[];
-    static const char QC_PIXEL_FORMAT_BAYER_IDEAL_MIPI_14GBRG[];
-    static const char QC_PIXEL_FORMAT_BAYER_IDEAL_MIPI_14GRBG[];
-    static const char QC_PIXEL_FORMAT_BAYER_IDEAL_MIPI_14RGGB[];
-    static const char QC_PIXEL_FORMAT_BAYER_IDEAL_MIPI_14BGGR[];
     static const char QC_PIXEL_FORMAT_BAYER_IDEAL_PLAIN8_8GBRG[];
     static const char QC_PIXEL_FORMAT_BAYER_IDEAL_PLAIN8_8GRBG[];
     static const char QC_PIXEL_FORMAT_BAYER_IDEAL_PLAIN8_8RGGB[];
@@ -437,10 +409,6 @@ private:
     static const char QC_PIXEL_FORMAT_BAYER_IDEAL_PLAIN16_12GRBG[];
     static const char QC_PIXEL_FORMAT_BAYER_IDEAL_PLAIN16_12RGGB[];
     static const char QC_PIXEL_FORMAT_BAYER_IDEAL_PLAIN16_12BGGR[];
-    static const char QC_PIXEL_FORMAT_BAYER_IDEAL_PLAIN16_14GBRG[];
-    static const char QC_PIXEL_FORMAT_BAYER_IDEAL_PLAIN16_14GRBG[];
-    static const char QC_PIXEL_FORMAT_BAYER_IDEAL_PLAIN16_14RGGB[];
-    static const char QC_PIXEL_FORMAT_BAYER_IDEAL_PLAIN16_14BGGR[];
 
     // ISO values
     static const char ISO_AUTO[];
@@ -576,11 +544,6 @@ private:
     static const char CDS_MODE_OFF[];
     static const char CDS_MODE_ON[];
     static const char CDS_MODE_AUTO[];
-
-    static const char VALUE_FAST[];
-    static const char VALUE_HIGH_QUALITY[];
-
-    static const char KEY_SELECTED_AUTO_SCENE[];
 
     // Values for Video rotation
     static const char VIDEO_ROTATION_0[];
@@ -737,7 +700,6 @@ public:
     bool needThumbnailReprocess(uint32_t *pFeatureMask);
     inline bool isUbiFocusEnabled() {return m_bAFBracketingOn && !m_bReFocusOn;};
     inline bool isChromaFlashEnabled() {return m_bChromaFlashOn;};
-    inline bool isHighQualityNoiseReductionMode() {return m_bHighQualityNoiseReductionMode;};
     inline bool isTruePortraitEnabled() {return m_bTruePortraitOn;};
     inline size_t getTPMaxMetaSize() {
         return m_pCapability->true_portrait_settings_need.meta_max_size;};
@@ -795,7 +757,6 @@ public:
 
     int32_t getParmZoomLevel(){return mParmZoomLevel;};
     int8_t  getReprocCount(){return mTotalPPCount;};
-    bool isMultiPassReprocessing();
     int8_t  getCurPPCount(){return mCurPPCount;};
     void    setReprocCount();
     bool    isPostProcScaling();
@@ -806,12 +767,6 @@ public:
     uint8_t getLongshotStages();
     int8_t  getBufBatchCount() {return mBufBatchCnt;};
     int8_t  getVideoBatchSize() {return mVideoBatchSize;};
-
-    int32_t setManualCaptureMode(
-            QCameraManualCaptureModes value = CAM_MANUAL_CAPTURE_TYPE_OFF);
-    QCameraManualCaptureModes getManualCaptureMode()
-            {return m_ManualCaptureMode;};
-    int64_t getExposureTime() {return m_expTime;};
 
     cam_capture_frame_config_t getCaptureFrameConfig()
             { return m_captureFrameConfig; };
@@ -832,17 +787,14 @@ public:
     int32_t getRelatedCamCalibration(
             cam_related_system_calibration_data_t* calib);
     int32_t bundleRelatedCameras(bool sync, uint32_t sessionid);
-    uint8_t fdModeInVideo();
-    bool isOEMFeatEnabled() { return m_bOEMFeatEnabled; }
-
-    int32_t setZslMode(bool value);
-    int32_t updateZSLModeValue(bool value);
+    bool isFDInVideoEnabled();
 
     bool isReprocScaleEnabled();
     bool isUnderReprocScaling();
     int32_t getPicSizeFromAPK(int &width, int &height);
 
     int32_t checkFeatureConcurrency();
+
 private:
     int32_t setPreviewSize(const QCameraParameters& );
     int32_t setVideoSize(const QCameraParameters& );
@@ -897,7 +849,6 @@ private:
     int32_t setTruePortrait(const QCameraParameters& );
     int32_t setSeeMore(const QCameraParameters& );
     int32_t setStillMore(const QCameraParameters& );
-    int32_t setNoiseReductionMode(const QCameraParameters& );
     int32_t setRedeyeReduction(const QCameraParameters& );
     int32_t setGpsLocation(const QCameraParameters& );
     int32_t setRecordingHint(const QCameraParameters& );
@@ -919,7 +870,6 @@ private:
     int32_t setPAAF();
     int32_t setTintlessValue(const QCameraParameters& params);
     int32_t setCDSMode(const QCameraParameters& params);
-    int32_t setInitialExposureIndex(const QCameraParameters& params);
     int32_t setMobicat(const QCameraParameters& params);
     int32_t setRdiMode(const QCameraParameters& );
     int32_t setSecureMode(const QCameraParameters& );
@@ -969,7 +919,6 @@ private:
     int32_t setTruePortrait(const char *truePortraitStr);
     int32_t setSeeMore(const char *SeeMoreStr);
     int32_t setStillMore(const char *StillMoreStr);
-    int32_t setNoiseReductionMode(const char *noiseReductionModeStr);
     int32_t setRedeyeReduction(const char *redeyeStr);
     int32_t setWaveletDenoise(const char *wnrStr);
     int32_t setFaceRecognition(const char *faceRecog, uint32_t maxFaces);
@@ -993,10 +942,10 @@ private:
     void setVideoBatchSize();
     void setDcrf();
     int32_t setStreamPpMask(cam_stream_type_t stream_type, uint32_t pp_mask);
-    void setOfflineRAW(bool value = 0);
+    void setOfflineRAW();
     int32_t configureFlash(cam_capture_frame_config_t &frame_config);
     int32_t configureLowLight(cam_capture_frame_config_t &frame_config);
-    int32_t configureManualCapture(cam_capture_frame_config_t &frame_config);
+
 
     bool isTNRPreviewEnabled() {return m_bTNRPreviewOn;};
     bool isTNRVideoEnabled() {return m_bTNRVideoOn;};
@@ -1028,7 +977,6 @@ private:
             size_t len, int &default_fps_index);
     String8 createFpsString(cam_fps_range_t &fps);
     String8 createZoomRatioValuesString(uint32_t *zoomRatios, size_t length);
-    int32_t setDualLedCalibration(const QCameraParameters& params);
 
     // ops for batch set/get params with server
     int32_t initBatchUpdate(parm_buffer_t *p_table);
@@ -1071,7 +1019,6 @@ private:
     static const QCameraMap<int> VIDEO_ROTATION_MODES_MAP[];
     static const QCameraMap<int> SEE_MORE_MODES_MAP[];
     static const QCameraMap<int> STILL_MORE_MODES_MAP[];
-    static const QCameraMap<int> NOISE_REDUCTION_MODES_MAP[];
 
     QCameraReprocScaleParam m_reprocScaleParam;
 
@@ -1145,7 +1092,6 @@ private:
     cam_scene_mode_type m_SelectedScene;
     bool m_bSeeMoreOn;
     bool m_bStillMoreOn;
-    bool m_bHighQualityNoiseReductionMode;
     cam_fps_range_t m_hfrFpsRange;
     bool m_bHfrMode;
     bool m_bSensorHDREnabled;             // if HDR is enabled
@@ -1180,12 +1126,7 @@ private:
     bool m_LLCaptureEnabled;
     cam_low_light_mode_t m_LowLightLevel;
     bool m_bLtmForSeeMoreEnabled;
-    int64_t m_expTime;
-    bool m_bOEMFeatEnabled;
-    int32_t m_isoValue;
-    QCameraManualCaptureModes m_ManualCaptureMode;
     cam_dyn_img_data_t m_DynamicImgData;
-    int32_t m_dualLedCalibration;
 };
 
 }; // namespace qcamera

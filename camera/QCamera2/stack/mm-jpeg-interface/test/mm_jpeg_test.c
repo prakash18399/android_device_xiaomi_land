@@ -1,4 +1,4 @@
-/* Copyright (c) 2013-2016, The Linux Foundation. All rights reserved.
+/* Copyright (c) 2013-2015, The Linux Foundation. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -27,18 +27,11 @@
  *
  */
 
-// System dependencies
-#include <pthread.h>
-#include <stdlib.h>
-#define TIME_H <SYSTEM_HEADER_PREFIX/time.h>
-#include TIME_H
-
-// JPEG dependencies
 #include "mm_jpeg_interface.h"
 #include "mm_jpeg_ionbuf.h"
-
-// Camera dependencies
-#include "mm_camera_dbg.h"
+#include <sys/time.h>
+#include <stdlib.h>
+#include <stdbool.h>
 
 #define MAX_NUM_BUFS (12)
 #define MAX_NUM_CLIENT (8)
@@ -56,7 +49,7 @@
     fwrite(p_addr, 1, len, fp); \
     fclose(fp); \
   } else { \
-    LOGE("cannot dump image"); \
+    CDBG_ERROR("%s:%d] cannot dump image", __func__, __LINE__); \
   } \
 })
 
@@ -167,22 +160,22 @@ static void mm_jpeg_encode_callback(jpeg_job_status_t status,
   pthread_mutex_lock(&p_obj->lock);
 
   if (status == JPEG_JOB_STATUS_ERROR) {
-    LOGE("Encode error");
+    CDBG_ERROR("%s:%d] Encode error", __func__, __LINE__);
   } else {
     int i = 0;
     for (i = 0; p_obj->job_id[i] && (jobId != p_obj->job_id[i]); i++)
       ;
     if (!p_obj->job_id[i]) {
-      LOGE("Cannot find job ID!!!");
+      CDBG_ERROR("%s:%d] Cannot find job ID!!!", __func__, __LINE__);
       goto error;
     }
-    LOGE("Encode success addr %p len %zu idx %d",
-       p_output->buf_vaddr, p_output->buf_filled_len, i);
+    CDBG_ERROR("%s:%d] Encode success addr %p len %zu idx %d",
+      __func__, __LINE__, p_output->buf_vaddr, p_output->buf_filled_len, i);
 
     p_obj->buf_filled_len[i] = p_output->buf_filled_len;
     if (p_obj->min_out_bufs) {
-      LOGE("Saving file%s addr %p len %zu",
-           p_obj->out_filename[i],
+      CDBG_ERROR("%s:%d] Saving file%s addr %p len %zu",
+          __func__, __LINE__, p_obj->out_filename[i],
           p_output->buf_vaddr, p_output->buf_filled_len);
       DUMP_TO_FILE(p_obj->out_filename[i], p_output->buf_vaddr,
         p_output->buf_filled_len);
@@ -193,7 +186,7 @@ static void mm_jpeg_encode_callback(jpeg_job_status_t status,
 error:
 
   if (g_i >= g_count) {
-    LOGE("Signal the thread");
+    CDBG_ERROR("%s:%d] Signal the thread", __func__, __LINE__);
     pthread_cond_signal(&p_obj->cond);
   }
   pthread_mutex_unlock(&p_obj->lock);
@@ -206,14 +199,14 @@ int mm_jpeg_test_alloc(buffer_t *p_buffer, int use_pmem)
   if (use_pmem) {
     p_buffer->addr = (uint8_t *)buffer_allocate(p_buffer, 0);
     if (NULL == p_buffer->addr) {
-      LOGE("Error");
+      CDBG_ERROR("%s:%d] Error",__func__, __LINE__);
       return -1;
     }
   } else {
     /* Allocate heap memory */
     p_buffer->addr = (uint8_t *)malloc(p_buffer->size);
     if (NULL == p_buffer->addr) {
-      LOGE("Error");
+      CDBG_ERROR("%s:%d] Error",__func__, __LINE__);
       return -1;
     }
   }
@@ -239,17 +232,17 @@ int mm_jpeg_test_read(mm_jpeg_intf_test_t *p_obj, uint32_t idx)
   size_t file_size = 0;
   fp = fopen(p_obj->filename[idx], "rb");
   if (!fp) {
-    LOGE("error");
+    CDBG_ERROR("%s:%d] error", __func__, __LINE__);
     return -1;
   }
   fseek(fp, 0, SEEK_END);
   file_size = (size_t)ftell(fp);
   fseek(fp, 0, SEEK_SET);
-  LOGE("input file size is %zu buf_size %zu",
-     file_size, p_obj->input[idx].size);
+  CDBG_ERROR("%s:%d] input file size is %zu buf_size %zu",
+    __func__, __LINE__, file_size, p_obj->input[idx].size);
 
   if (p_obj->input[idx].size > file_size) {
-    LOGE("error");
+    CDBG_ERROR("%s:%d] error", __func__, __LINE__);
     fclose(fp);
     return -1;
   }
@@ -281,7 +274,7 @@ int mm_jpeg_test_read_qtable(const char *filename, bool chroma_flag)
 
   fp = fopen(filename, "r");
   if (!fp) {
-    LOGE("error cannot open file");
+    CDBG_ERROR("%s:%d] error cannot open file", __func__, __LINE__);
     return -1;
   }
 
@@ -321,26 +314,29 @@ static int encode_init(jpeg_test_input_t *p_input, mm_jpeg_intf_test_t *p_obj,
         (size_t)p_input->col_fmt.mult.denominator;
     rc = mm_jpeg_test_alloc(&p_obj->input[i], p_obj->use_ion);
     if (rc) {
-      LOGE("Error");
+      CDBG_ERROR("%s:%d] Error",__func__, __LINE__);
       return -1;
     }
 
 
     rc = mm_jpeg_test_read(p_obj, i);
     if (rc) {
-      LOGE("Error, unable to read input image");
+      CDBG_ERROR("%s:%d] Error, unable to read input image",
+        __func__, __LINE__);
       return -1;
     }
 
     mm_jpeg_test_read_qtable(p_input->qtable_luma_file, false);
     if (rc) {
-      LOGE("Error, unable to read luma qtable");
+      CDBG_ERROR("%s:%d] Error, unable to read luma qtable",
+        __func__, __LINE__);
       return -1;
     }
 
     mm_jpeg_test_read_qtable(p_input->qtable_chroma_file, true);
     if (rc) {
-      LOGE("Error, unable to read chrome qtable");
+      CDBG_ERROR("%s:%d] Error, unable to read chrome qtable",
+        __func__, __LINE__);
       return -1;
     }
 
@@ -392,7 +388,7 @@ static int encode_init(jpeg_test_input_t *p_input, mm_jpeg_intf_test_t *p_obj,
     p_obj->output[i].size = size * 3/2;
     rc = mm_jpeg_test_alloc(&p_obj->output[i], 0);
     if (rc) {
-      LOGE("Error");
+      CDBG_ERROR("%s:%d] Error",__func__, __LINE__);
       return -1;
     }
     /* dest buffer config */
@@ -475,7 +471,7 @@ static void *encode_test(void *data)
   uint32_t i = 0;
   jpeg_obj->handle = jpeg_open(&jpeg_obj->ops, NULL, jpeg_obj->pic_size, NULL);
   if (jpeg_obj->handle == 0) {
-    LOGE("Error");
+    CDBG_ERROR("%s:%d] Error",__func__, __LINE__);
     jpeg_obj->ret = -1;
     goto end;
   }
@@ -483,7 +479,7 @@ static void *encode_test(void *data)
   rc = jpeg_obj->ops.create_session(jpeg_obj->handle, &jpeg_obj->params,
     &jpeg_obj->job.encode_job.session_id);
   if (jpeg_obj->job.encode_job.session_id == 0) {
-    LOGE("Error");
+    CDBG_ERROR("%s:%d] Error",__func__, __LINE__);
     jpeg_obj->ret = -1;
     goto end;
   }
@@ -500,7 +496,7 @@ static void *encode_test(void *data)
 
     rc = jpeg_obj->ops.start_job(&jpeg_obj->job, &jpeg_obj->job_id[i]);
     if (rc) {
-      LOGE("Error");
+      CDBG_ERROR("%s:%d] Error",__func__, __LINE__);
       jpeg_obj->ret = rc;
       goto end;
     }
@@ -522,8 +518,8 @@ end:
   for (i = 0; i < jpeg_obj->num_bufs; i++) {
     if (!jpeg_obj->min_out_bufs) {
       // Save output files
-      LOGE("Saving file%s addr %p len %zu",
-          jpeg_obj->out_filename[i],
+      CDBG_ERROR("%s:%d] Saving file%s addr %p len %zu",
+          __func__, __LINE__,jpeg_obj->out_filename[i],
           jpeg_obj->output[i].addr, jpeg_obj->buf_filled_len[i]);
 
       snprintf(file_name, sizeof(file_name), "%s_%d.jpg",
@@ -648,7 +644,7 @@ static int mm_jpeg_test_get_input(int argc, char *argv[],
 
   p_test = realloc(p_test, (in_file_cnt + 1) * sizeof(*p_test));
   if (!p_test) {
-    LOGE("Error");
+    CDBG_ERROR("%s:%d] Error",__func__, __LINE__);
     return 1;
   }
   memset(p_test+1, 0, (in_file_cnt) * sizeof(*p_test));
@@ -719,13 +715,13 @@ int main(int argc, char* argv[])
   if (argc > 1) {
     p_test_input = calloc(2, sizeof(*p_test_input));
     if (!p_test_input) {
-      LOGE("Error");
+      CDBG_ERROR("%s:%d] Error",__func__, __LINE__);
       goto exit;
     }
     memcpy(p_test_input, &jpeg_input[0], sizeof(*p_test_input));
     ret = mm_jpeg_test_get_input(argc, argv, p_test_input);
     if (ret) {
-      LOGE("Error");
+      CDBG_ERROR("%s:%d] Error",__func__, __LINE__);
       goto exit;
     }
   } else {
@@ -737,7 +733,7 @@ int main(int argc, char* argv[])
     memset(&client[i], 0x0, sizeof(mm_jpeg_intf_test_t));
     ret = encode_init(p_test_input, &client[i], i);
     if (ret) {
-      LOGE("Error");
+      CDBG_ERROR("%s:%d] Error",__func__, __LINE__);
       return -1;
     }
 

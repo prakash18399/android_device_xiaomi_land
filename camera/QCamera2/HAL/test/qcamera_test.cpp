@@ -1,4 +1,4 @@
-/* Copyright (c) 2012-2016, The Linux Foundation. All rights reserved.
+/* Copyright (c) 2012-2015, The Linux Foundataion. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -70,8 +70,11 @@
 #include <gralloc_priv.h>
 #include <math.h>
 
+//#include "qcamera_test.h"
 #include "cam_types.h"
 
+#define ERROR(format, ...) printf( \
+    "%s[%d] : ERROR: "format"\n", __func__, __LINE__, ##__VA_ARGS__)
 #define VIDEO_BUF_ALLIGN(size, allign) \
   (((size) + (allign-1)) & (typeof(size))(~(allign-1)))
 
@@ -110,7 +113,7 @@ void CameraContext::previewCallback(const sp<IMemory>& mem)
                 ptr[8],
                 ptr[9]);
     } else {
-        ALOGE(" no preview for NULL CB\n");
+        ALOGE("%s: no preview for NULL CB\n", __func__);
     }
 }
 
@@ -197,7 +200,7 @@ status_t CameraContext::saveFile(const sp<IMemory>& mem, String8 path)
         return INVALID_OPERATION;
     }
 
-    printf(" buffer=%p, size=%lld stored at %s\n",
+    printf("%s: buffer=%p, size=%lld stored at %s\n",
             __FUNCTION__, buff, (long long int) size, path.string());
 
     if (fd >= 0)
@@ -228,7 +231,7 @@ SkBitmap * CameraContext::PiPCopyToOneFile(
     unsigned int srcOffset;
 
     if (bitmap0 == NULL || bitmap1 == NULL) {
-        ALOGE(" bitmap0 : %p, bitmap1 : %p\n",  bitmap0, bitmap1);
+        ALOGE("%s: bitmap0 : %p, bitmap1 : %p\n", __func__, bitmap0, bitmap1);
         return NULL;
     }
 
@@ -419,7 +422,7 @@ status_t CameraContext::encodeJPEG(SkWStream * stream,
 
     skJpegEnc = SkImageEncoder::Create(SkImageEncoder::kJPEG_Type);
     if (!skJpegEnc) {
-        ALOGE(" skJpegEnc is NULL\n");
+        ALOGE("%s: skJpegEnc is NULL\n", __func__);
         return BAD_VALUE;
     }
 
@@ -502,7 +505,7 @@ status_t CameraContext::encodeJPEG(SkWStream * stream,
     fseek(fh, 0, SEEK_END);
     len = (size_t)ftell(fh);
     rewind(fh);
-    printf(" buffer=%p, size=%zu stored at %s\n",
+    printf("%s: buffer=%p, size=%zu stored at %s\n",
             __FUNCTION__, bitmap->getPixels(), len, path.string());
 
     free(mJEXIFSection.Data);
@@ -538,7 +541,7 @@ status_t CameraContext::ReadSectionsFromBuffer (unsigned char *buffer,
 
     mSections = (Sections_t *)malloc(sizeof(Sections_t) * mSectionsAllocated);
     if (!mSections) {
-        printf(" not enough memory\n");
+        printf("%s: not enough memory\n", __func__);
         return BAD_VALUE;
     }
 
@@ -570,7 +573,7 @@ status_t CameraContext::ReadSectionsFromBuffer (unsigned char *buffer,
         // The call to CheckSectionsAllocated() may reallocate mSections
         // so need to check for NULL again.
         if (mSections == NULL) {
-            printf(" not enough memory\n");
+            printf("%s: not enough memory\n", __func__);
             return BAD_VALUE;
         }
 
@@ -649,7 +652,7 @@ status_t CameraContext::ReadSectionsFromBuffer (unsigned char *buffer,
                     // may reallocate mSections
                     // so need to check for NULL again.
                     if (mSections == NULL) {
-                        printf(" not enough memory\n");
+                        printf("%s: not enough memory\n", __func__);
                         return BAD_VALUE;
                     }
 
@@ -957,7 +960,7 @@ void CameraContext::postData(int32_t msgType,
 
                     mJEXIFTmp = FindSection(M_EXIF);
                     if (!mJEXIFTmp) {
-                        ALOGE("skBMDec is null\n");
+                        ALOGE("%s:skBMDec is null\n", __func__);
                         DiscardData();
                         DiscardSections();
                         return;
@@ -965,7 +968,7 @@ void CameraContext::postData(int32_t msgType,
                     mJEXIFSection = *mJEXIFTmp;
                     mJEXIFSection.Data = (unsigned char*)malloc(mJEXIFTmp->Size);
                     if (!mJEXIFSection.Data) {
-                        ALOGE(" Not enough memory\n");
+                        ALOGE("%s: Not enough memory\n", __func__);
                         DiscardData();
                         DiscardSections();
                         return;
@@ -979,14 +982,14 @@ void CameraContext::postData(int32_t msgType,
                     skBMDec = PiPCopyToOneFile(&mInterpr->camera[0]->skBMtmp,
                             &mInterpr->camera[1]->skBMtmp);
                     if (!skBMDec) {
-                        ALOGE("skBMDec is null\n");
+                        ALOGE("%s:skBMDec is null\n", __func__);
                         delete wStream;
                         return;
                     }
 
                     if (encodeJPEG(wStream, skBMDec, jpegPath) != false) {
                         printf("%s():%d:: Failed during jpeg encode\n",
-                                __FUNCTION__);
+                                __FUNCTION__, __LINE__);
                         mInterpr->PiPUnlock();
                         return;
                     }

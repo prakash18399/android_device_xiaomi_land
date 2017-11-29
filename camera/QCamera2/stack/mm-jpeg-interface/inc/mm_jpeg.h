@@ -1,4 +1,4 @@
-/* Copyright (c) 2012-2016, The Linux Foundation. All rights reserved.
+/* Copyright (c) 2012-2015, The Linux Foundation. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -30,20 +30,15 @@
 #ifndef MM_JPEG_H_
 #define MM_JPEG_H_
 
-// OpenMAX dependencies
+#include <cam_semaphore.h>
+#include "mm_jpeg_interface.h"
+#include "cam_list.h"
 #include "OMX_Types.h"
 #include "OMX_Index.h"
 #include "OMX_Core.h"
 #include "OMX_Component.h"
 #include "QOMX_JpegExtensions.h"
-
-// JPEG dependencies
-#include "mm_jpeg_interface.h"
 #include "mm_jpeg_ionbuf.h"
-
-// Camera dependencies
-#include "cam_list.h"
-#include "cam_semaphore.h"
 
 #define MM_JPEG_MAX_THREADS 30
 #define MM_JPEG_CIRQ_SIZE 30
@@ -88,10 +83,10 @@ typedef enum {
   FILE *fp = fopen(filename, "w+"); \
   if (fp) { \
     rc = fwrite(p_addr, 1, len, fp); \
-    LOGE("written size %zu", len); \
+    CDBG_ERROR("%s:%d] written size %zu", __func__, __LINE__, len); \
     fclose(fp); \
   } else { \
-    LOGE("open %s failed", filename); \
+    CDBG_ERROR("%s:%d] open %s failed", __func__, __LINE__, filename); \
   } \
 })
 
@@ -108,10 +103,10 @@ typedef enum {
   if (fp) { \
     rc = fwrite(p_addr1, 1, len1, fp); \
     rc = fwrite(p_addr2, 1, len2, fp); \
-    LOGE("written %zu %zu", len1, len2); \
+    CDBG_ERROR("%s:%d] written %zu %zu", __func__, __LINE__, len1, len2); \
     fclose(fp); \
   } else { \
-    LOGE("open %s failed", filename); \
+    CDBG_ERROR("%s:%d] open %s failed", __func__, __LINE__, filename); \
   } \
 })
 
@@ -124,7 +119,7 @@ typedef enum {
  **/
 #define MM_JPEG_CHK_ABORT(p, ret, label) ({ \
   if (MM_JPEG_ABORT_INIT == p->abort_state) { \
-    LOGE("jpeg abort"); \
+    CDBG_ERROR("%s:%d] jpeg abort", __func__, __LINE__); \
     ret = OMX_ErrorNone; \
     goto label; \
   } \
@@ -403,10 +398,9 @@ typedef struct mm_jpeg_obj_t {
   uint32_t num_sessions;
   uint32_t reuse_reproc_buffer;
 
-  cam_jpeg_metadata_t *jpeg_metadata;
+  /*OTP Data - remains the same per camera session*/
+  cam_related_system_calibration_data_t *calibration_data;
 
-  /* Pointer to the session in progress*/
-  mm_jpeg_job_session_t *p_session_inprogress;
 } mm_jpeg_obj;
 
 /** mm_jpeg_pending_func_t:

@@ -1,4 +1,4 @@
-/* Copyright (c) 2012-2016, The Linux Foundation. All rights reserved.
+/* Copyright (c) 2012-2015, The Linux Foundataion. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -29,16 +29,13 @@
 
 #ifndef __QCAMERA3HWI_MEM_H__
 #define __QCAMERA3HWI_MEM_H__
-
-// System dependencies
-#include <linux/msm_ion.h>
+#include <hardware/camera3.h>
 #include <utils/Mutex.h>
 
-// Camera dependencies
-#include "camera3.h"
-
 extern "C" {
-#include "mm_camera_interface.h"
+#include <sys/types.h>
+#include <linux/msm_ion.h>
+#include <mm_camera_interface.h>
 }
 
 using namespace android;
