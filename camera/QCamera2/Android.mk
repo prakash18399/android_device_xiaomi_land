@@ -60,17 +60,16 @@ LOCAL_C_INCLUDES := \
         $(LOCAL_PATH)/stack/common \
         $(LOCAL_PATH)/stack/mm-camera-interface/inc \
         $(LOCAL_PATH)/util \
-        $(LOCAL_PATH)/HAL3 \
         hardware/libhardware/include/hardware \
-        $(call project-path-for,qcom-media)/libstagefrighthw \
-        $(call project-path-for,qcom-media)/mm-core/inc \
+        hardware/qcom/media/libstagefrighthw \
+        hardware/qcom/media/mm-core/inc \
         system/core/include/cutils \
         system/core/include/system \
         system/media/camera/include/system
 
 #HAL 1.0 Include paths
 LOCAL_C_INCLUDES += \
-        $(call project-path-for,qcom-camera)/QCamera2/HAL
+        hardware/qcom/camera/QCamera2/HAL
 
 ifeq ($(TARGET_COMPILE_WITH_MSM_KERNEL),true)
 LOCAL_C_INCLUDES += $(TARGET_OUT_INTERMEDIATES)/KERNEL_OBJ/usr/include
@@ -80,7 +79,7 @@ ifeq ($(TARGET_TS_MAKEUP),true)
 LOCAL_CFLAGS += -DTARGET_TS_MAKEUP
 LOCAL_C_INCLUDES += $(LOCAL_PATH)/HAL/tsMakeuplib/include
 endif
-ifneq (,$(filter msm8974 msm8916 msm8226 msm8610 msm8916 apq8084 msm8084 msm8994 msm8992 msm8952 msm8937 titanium msm8996,$(TARGET_BOARD_PLATFORM)))
+ifneq (,$(filter msm8974 msm8916 msm8226 msm8610 msm8916 apq8084 msm8084 msm8994 msm8992 msm8952 msm8937 msm8953 msm8996,$(TARGET_BOARD_PLATFORM)))
     LOCAL_CFLAGS += -DVENUS_PRESENT
 endif
 
@@ -92,7 +91,7 @@ endif
 LOCAL_C_INCLUDES += \
         $(TARGET_OUT_HEADERS)/qcom/display
 LOCAL_C_INCLUDES += \
-        $(call project-path-for,qcom-display)/libqservice
+        hardware/qcom/display/libqservice
 LOCAL_SHARED_LIBRARIES := libcamera_client liblog libhardware libutils libcutils libdl libsync libgui
 LOCAL_SHARED_LIBRARIES += libmmcamera_interface libmmjpeg_interface libui libcamera_metadata
 LOCAL_SHARED_LIBRARIES += libqdMetaData libqservice libbinder

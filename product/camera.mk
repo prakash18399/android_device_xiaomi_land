@@ -7,5 +7,5 @@ PRODUCT_COPY_FILES += \
 
 # Snap
 PRODUCT_PACKAGES += \
-    libshims_camera \
+    camera.msm8937 \
     Snap
