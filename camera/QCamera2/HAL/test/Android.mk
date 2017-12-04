@@ -18,6 +18,7 @@ LOCAL_SHARED_LIBRARIES:= \
     libskia \
     libstagefright \
     libstagefright_foundation \
+    liblog \
 
 ifneq (1,$(filter 1,$(shell echo "$$(( $(PLATFORM_SDK_VERSION) >= 18 ))" )))
 
@@ -37,7 +38,7 @@ LOCAL_C_INCLUDES += \
     external/skia/include/core \
     external/skia/include/images \
     $(TARGET_OUT_HEADERS)/qcom/display \
-    hardware/qcom/camera/QCamera2/stack/common \
+    $(call project-path-for,qcom-camera)/QCamera2/stack/common \
     frameworks/av/include/media/stagefright \
     frameworks/native/include/media/openmax \
     $(TARGET_OUT_INTERMEDIATES)/KERNEL_OBJ/usr/include
