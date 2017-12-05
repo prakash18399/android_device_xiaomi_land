@@ -163,14 +163,14 @@ persist.data.iwlan.enable=true
 persist.dbg.wfc_avail_ovr=0
 persist.radio.sw_mbn_update=0
 persist.radio.hw_mbn_update=0
-persist.radio.calls.on.ims=true
+persist.radio.calls.on.ims=0
 persist.radio.custom_ecc=0
 persist.radio.DROPSETENABLE=1
 persist.radio.force_on_dc=true
 persist.radio.ignore_dom_time=5
-persist.sys.dun.override=0
 telephony.lteOnCdmaDevice=1
 service.qti.ims.enabled=1
+persist.volte_enabled_by_hw=1
 
 # SdcardFs
 ro.sys.sdcardfs=true
