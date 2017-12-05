@@ -334,6 +334,24 @@ on boot
     chown bluetooth net_bt /sys/class/rfkill/rfkill0/device/extldo
     chmod 0660 /sys/class/rfkill/rfkill0/device/extldo
 
+    # Add a cpuset for the camera daemon
+    # we want all cores for camera
+    mkdir /dev/cpuset/camera-daemon
+    write /dev/cpuset/camera-daemon/cpus 0-7
+    write /dev/cpuset/camera-daemon/mems 0
+    chown system system /dev/cpuset/camera-daemon
+    chown system system /dev/cpuset/camera-daemon/tasks
+    chmod 0664 /dev/cpuset/camera-daemon/tasks
+
+    # Update foreground and background cpusets
+    # Reserve CPU 7 for the top app
+    write /dev/cpuset/foreground/cpus 0-6
+    write /dev/cpuset/foreground/boost/cpus 0-3
+    write /dev/cpuset/background/cpus 4-6
+    write /dev/cpuset/system-background/cpus 4-6
+    write /dev/cpuset/top-app/cpus 0-7
+    write /dev/cpuset/camera-daemon/cpus 4-7
+
     #Create QMUX deamon socket area
     mkdir /dev/socket/qmux_radio 0770 radio radio
     chmod 2770 /dev/socket/qmux_radio
@@ -473,7 +491,7 @@ service cnd /system/vendor/bin/cnd
 service dpmQmiMgr /system/vendor/bin/dpmQmiMgr
     class main
     user system
-    group syste
+    group system
     writepid /dev/cpuset/system-background/tasks
 
 service irsc_util /vendor/bin/irsc_util "/vendor/etc/sec_config"
@@ -513,7 +531,7 @@ service config_bt_addr /system/vendor/bin/btnvtool -O
     group bluetooth radio
     oneshot
 	
-service hciattach /system//vendor/bin/hci_qcomm_init -e
+service hciattach /system/vendor/bin/hci_qcomm_init -e
     class late_start
     user bluetooth
     group bluetooth net_bt_admin
@@ -521,7 +539,7 @@ service hciattach /system//vendor/bin/hci_qcomm_init -e
     oneshot
 
 on property:bluetooth.hciattach=true
-    start hiattach
+    start hciattach 
     setprop bluetooth.status on
 
 on property:bluetooth.hciattach=false
@@ -541,6 +559,7 @@ service port-bridge /system/bin/port-bridge
 
 service netmgrd /system/vendor/bin/netmgrd
     class main
+    group system wakelock
     writepid /dev/cpuset/system-background/tasks
 
 service qti /system/vendor/bin/qti
@@ -714,15 +733,12 @@ service wcnss-service /system/bin/wcnss_service
     group system wifi radio
     oneshot
 
-service imsqmidaemon /system /vendor/bin/imsqmidaemon
+service imsqmidaemon /system/vendor/bin/imsqmidaemon
     class main
     user system
     socket ims_qmid stream 0660 system radio
-    group radio net_raw log diag    
+    group radio log diag    
     writepid /dev/cpuset/system-background/tasks
-
-on property:service.qti.ims.enabled=1
-    start imsqmidaemon
 
 service imsdatadaemon /system/vendor/bin/imsdatadaemon
     class main
@@ -745,7 +761,7 @@ service ims_rtp_daemon /system/vendor/bin/ims_rtp_daemon
 service imsrcsservice /system/vendor/bin/imsrcsd
     class main
     user system
-    group radio net_raw diag diag log
+    group radio net_raw diag inet log
     writepid /dev/cpuset/system-background/tasks
     disabled
 
