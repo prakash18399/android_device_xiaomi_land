@@ -39,7 +39,6 @@ on early-init
     chmod 0620 /dev/kmsg
 
 on init
-    export LD_SHIM_LIBS "/system/bin/mm-qcamera-daemon|libshims_camera.so:/system/vendor/lib64/lib-imscamera.so|libshim_ims_camera.so"
 
     # Set permissions for persist partition
     mkdir /persist 0771 root system
@@ -61,7 +60,6 @@ on fs
     restorecon_recursive /persist
 
     write /proc/sys/vm/page-cluster 0
-    write /proc/sys/vm/swappiness 100
 
     mkdir /persist/data 0700 system system
     restorecon_recursive /persist
@@ -147,7 +145,7 @@ on post-fs-data
 
     #create netmgr log dir
     mkdir /data/vendor/netmgr 0770 radio radio
-    chmod 0770 /data/vendor/netmg
+    chmod 0770 /data/vendor/netmgr
 
     # Create the directories used by CnE subsystem
     mkdir /data/connectivity 0771 system system
@@ -266,16 +264,6 @@ on post-fs-data
 
     #Create FTM_AP dir for factory test
     mkdir /data/FTM_AP 0775 system system
-
-service ssr_setup /system/bin/ssr_setup
-    oneshot
-    disabled
-
-service ss_ramdump /system/bin/subsystem_ramdump
-    class main
-    user system
-    group system
-    disabled
 
     # set aggressive read ahead for dm-0 and dm-1 during boot up
     write /sys/block/dm-0/queue/read_ahead_kb 2048
@@ -431,6 +419,7 @@ on boot
     chown root system /sys/kernel/dload/dload_mode
     chmod 0660 /sys/kernel/dload/dload_mode
 
+    # Wifi firmware reload path
     chown wifi wifi /sys/module/wlan/parameters/fwpath
 
     # Create directory used for display
@@ -692,7 +681,6 @@ service qcamerasvr /system/bin/mm-qcamera-daemon
     class late_start
     user camera
     group camera system inet input graphics
-    writepid /dev/cpuset/system-background/tasks
 
 # Allow usb charging to be disabled peristently
 on property:persist.usb.chgdisabled=1
