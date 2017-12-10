@@ -24,3 +24,7 @@ include $(DEVICE_PATH)/product/*.mk
 
 # Inherit proprietary files
 $(call inherit-product, vendor/xiaomi/land/land-vendor.mk)
+
+# HIDL
+PRODUCT_PACKAGES += \
+    android.hidl.base@1.0
