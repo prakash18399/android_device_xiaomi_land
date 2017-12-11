@@ -7,6 +7,7 @@ PRODUCT_COPY_FILES += \
 
 # Snap Camera
 PRODUCT_PACKAGES += \
+    camera.msm8937 \
     Snap
 
 # Libshim
