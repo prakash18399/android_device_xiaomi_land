@@ -1,0 +1,14 @@
+cc_library {
+    shared_libs: ["libc"],
+    name: "libshims_camera",
+    srcs: [
+        "bionic/bionic_time_conversions.cpp",
+        "bionic/__cxa_guard.cpp",
+        "bionic/pthread_barrier.cpp",
+        "bionic/pthread_cond.cpp",
+        "bionic/pthread_mutex.cpp",
+        "bionic/pthread_once.cpp",
+        "bionic/pthread_rwlock.cpp",
+        "bionic/semaphore.cpp",
+    ]
+}
